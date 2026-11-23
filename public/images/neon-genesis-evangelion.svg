@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172554" /><stop offset="1" stop-color="#6d28d9" />
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".28" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bg)" />
+  <circle cx="200" cy="225" r="165" fill="url(#glow)" />
+  <circle cx="200" cy="225" r="78" fill="none" stroke="#ffffff" stroke-width="2" opacity=".35" />
+  <circle cx="200" cy="225" r="112" fill="none" stroke="#ffffff" stroke-width="1" opacity=".2" />
+  <path d="M0 455 Q200 415 400 455 V600 H0Z" fill="#0b0b14" opacity=".82" />
+  <text x="200" y="52" fill="#e2e8f0" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="4" text-anchor="middle">ANIMEVERSE</text>
+  <text x="200" y="500" fill="#f8fafc" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Neon Genesis</text>
+  <text x="200" y="532" fill="#f8fafc" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Evangelion</text>
+</svg>

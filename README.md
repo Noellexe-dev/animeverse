@@ -1,75 +1,42 @@
-# ANIMEVERSE
+# ANIMEVERSE V2
 
-Catálogo de 20 animes reales + comunidad. React + Vite + TypeScript + Tailwind. GitHub Pages en `/animeverse/`.
+Catálogo real de animes + red social para fans, con cuentas, perfiles, chats y opiniones. React + Vite + TypeScript + Tailwind + Supabase. Publicado en GitHub Pages en `/animeverse/`.
 
-## Modos de la comunidad
+## Novedades
 
-- **Sin configurar Supabase**: posts, favoritos, likes y comentarios se guardan solo en tu navegador (`localStorage`). Funciona igual que antes.
-- **Con Supabase configurado**: los posts, likes y comentarios se guardan en una base de datos en internet. Todas las personas ven lo mismo y pueden conversar.
+- **Bienvenida** al entrar: botón para entrar/registrarte o entrar como visitante.
+- **Catálogo ampliado** a 43 títulos reales con filtros: todo, clásicos, recientes y próximamente.
+- **Cada anime** tiene imagen, sinopsis, géneros, estudio, puntuación y un apartado de **opiniones de los fans con estrellas (1–5)**.
+- **Perfil**: nombre, biografía, foto opcional, perfil público/privado y lista personal **Favorito / Viendo / Visto** con estrellas.
+- **Comunidad** tipo Twitter: publicaciones de texto, imagen o ambos; hashtags; seguir a personas; me gusta **único por usuario**; respuestas; borrar tus propios posts.
+- **Chats** entre amigos (se siguen mutuamente). Los mensajes se borran solos a los 7 días; el contacto permanece.
+- **Borrar cuenta** desde tu perfil.
+- Los favoritos del corazón siguen guardándose en el navegador, como antes.
 
-La aplicación detecta sola si las variables están presentes; no hay que cambiar código.
+## Instalación en Supabase (solo una vez)
 
----
+1. Abre tu proyecto en **https://supabase.com**.
+2. **SQL Editor → New query**.
+3. Pega todo el contenido de `SUPABASE-SETUP-V2.sql`.
+4. **Run** → debe decir **Success**.
+5. Recomendado: **Authentication → Providers → Email** y desactiva **Confirm email** para que las cuentas se activen al instante. Guarda los cambios.
 
-## Activar la comunidad multiusuario (Supabase, gratis)
+> El código ya tiene la Project URL y la publishable key de tu proyecto escritas en `src/lib/supabase.ts`. No hay secretos nuevos que configurar.
 
-### 1. Crear el proyecto
+## Subir a GitHub
 
-1. Entra a **https://supabase.com**.
-2. Clic en **Start your project** y regístrate con **GitHub** (botón *Continue with GitHub*).
-3. Clic en **New project**.
-4. Llena:
-   - **Name**: `animeverse`
-   - **Database Password**: inventa una contraseña y guárdala.
-   - **Region**: elige la más cercana a ti.
-   - Plan: **Free**.
-5. Clic en **Create new project**. Espera 1–2 minutos.
-
-### 2. Crear las tablas
-
-1. En el menú izquierdo, clic en **SQL Editor**.
-2. Clic en **New query**.
-3. Pega todo el contenido de `SUPABASE-SETUP.sql` (está en la carpeta `CAMBIOS-SUPABASE`).
-4. Clic en **Run**. Debe decir **Success**.
-
-### 3. Copiar las dos claves
-
-1. Menú izquierdo → **Project Settings** (engranaje) → **API**.
-2. Copia:
-   - **Project URL** (ej. `https://abcdefgh.supabase.co`)
-   - **anon public** key (una cadena larga que empieza con `eyJ...`)
-
-> La clave `anon` es pública por diseño: va en el código del navegador. La seguridad se controla con las reglas RLS del SQL. No es una clave privada.
-
-### 4. Poner las claves en GitHub
-
-1. En tu repo de GitHub → **Settings** → **Secrets and variables** → **Actions**.
-2. Clic en **New repository secret**.
-3. Crea estos dos secretos (los nombres deben ser exactos):
-
-| Name | Value |
-|---|---|
-| `VITE_SUPABASE_URL` | tu Project URL |
-| `VITE_SUPABASE_ANON_KEY` | tu anon public key |
-
-### 5. Subir los archivos
-
-Sube el contenido de la carpeta `CAMBIOS-SUPABASE` a tu repo (Add file → Upload files), haz commit y espera el ✔ verde en **Actions**.
-
----
+1. Abre la carpeta `ANIMEVERSE-V2-LISTO` (al mismo nivel que esta).
+2. Arrastra **todo su contenido** a **Add file → Upload files** en tu repo.
+3. Mensaje: `ANIMEVERSE V2: cuentas, perfiles, chats y catálogo ampliado`.
+4. **Commit changes**.
+5. **Actions** → espera el ✔ verde.
+6. Abre `https://noellexe-dev.github.io/animeverse/` y recarga con **Ctrl + Mayús + R**.
 
 ## Desarrollo local
 
 ```bash
 npm install
 npm run dev
-```
-
-Si quieres probar Supabase en local, crea un archivo `.env` con:
-
-```env
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu-clave-anon
 ```
 
 Vite sirve en `http://localhost:5173/animeverse/`.
@@ -81,12 +48,3 @@ npm run build
 ```
 
 Genera `dist/`.
-
-## Rutas
-
-- `/` catálogo
-- `/anime/:id` detalle
-- `/comunidad` muro de recomendaciones
-- `/favoritos` favoritos
-
-Todas usan `HashRouter`, así que recargar nunca da 404 en GitHub Pages.

@@ -21,7 +21,10 @@ export function AnimeCard({ anime }: AnimeCardProps) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-amber-300 backdrop-blur">
-            ★ {anime.rating.toFixed(1)}
+            {anime.rating > 0 ? `★ ${anime.rating.toFixed(1)}` : 'Próximamente'}
+          </span>
+          <span className="absolute bottom-3 left-3 rounded-full bg-violet-600/80 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
+            {anime.status}
           </span>
         </div>
       </Link>

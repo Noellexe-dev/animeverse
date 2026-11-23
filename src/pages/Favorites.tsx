@@ -12,6 +12,9 @@ export function Favorites() {
       <p className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-300">Tu colección</p>
       <h1 className="mt-2 text-4xl font-black text-white">Mis favoritos</h1>
       <p className="mt-3 text-slate-400">
+        Estos corazones se guardan en este navegador. Para llevar tu lista contigo, usa los botones «Favorito / Viendo / Visto» dentro de cada anime.
+      </p>
+      <p className="mt-3 text-slate-400">
         {favoriteAnimes.length > 0
           ? `${favoriteAnimes.length} ${favoriteAnimes.length === 1 ? 'anime guardado' : 'animes guardados'} en este navegador.`
           : 'Aún no has guardado ningún anime.'}
