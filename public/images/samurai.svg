@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b1206" /><stop offset="1" stop-color="#4c0519" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bg)" />
+  <path d="M60 380L340 120" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" opacity=".9" />
+  <path d="M90 410L320 180" stroke="#fde68a" stroke-width="2" opacity=".8" />
+  <circle cx="200" cy="235" r="95" fill="none" stroke="#fbbf24" stroke-width="1" opacity=".4" />
+  <text x="200" y="530" fill="#fef3c7" font-family="Arial, sans-serif" font-size="38" font-weight="700" text-anchor="middle" letter-spacing="5">SAMURAI</text>
+</svg>
