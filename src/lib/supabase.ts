@@ -1,8 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
+const url = https://supabase.com/dashboard/project/ewvqsovfnokdsatadaud/sql/8788310c-bc75-439c-a60f-e9ab58a2420a
+const anonKey = sb_publishable_APhkPRS3PRTuSQTx9Lm9uA_yRq2-ILl
 /**
  * La clave `anon` de Supabase es pública por diseño: está pensada para usarse
  * en el navegador. La seguridad real se controla con Row Level Security.
