@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { AnimeDetail } from './pages/AnimeDetail'
+import { Community } from './pages/Community'
 import { Favorites } from './pages/Favorites'
 import { Home } from './pages/Home'
 import { NotFound } from './pages/NotFound'
@@ -14,6 +15,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/anime/:id" element={<AnimeDetail />} />
+          <Route path="/comunidad" element={<Community />} />
           <Route path="/favoritos" element={<Favorites />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

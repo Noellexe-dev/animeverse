@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App'
 import { FavoritesProvider } from './context/FavoritesContext'
+import { SocialProvider } from './context/SocialContext'
 import './index.css'
 
 const rootElement = document.getElementById('root')
@@ -14,7 +15,9 @@ createRoot(rootElement).render(
   <StrictMode>
     <HashRouter>
       <FavoritesProvider>
-        <App />
+        <SocialProvider>
+          <App />
+        </SocialProvider>
       </FavoritesProvider>
     </HashRouter>
   </StrictMode>,

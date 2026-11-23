@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { AnimeCard } from '../components/AnimeCard'
 import { allGenres, animes } from '../data/anime'
 
@@ -35,6 +36,12 @@ export function Home() {
             Un universo de historias esperándote. Encuentra tu próxima obsesión, guarda tus favoritos
             y viaja entre géneros con un solo clic.
           </p>
+          <Link
+            to="/comunidad"
+            className="mt-7 inline-block rounded-full border border-violet-400/40 bg-violet-500/10 px-6 py-3 text-sm font-bold text-violet-100 hover:bg-violet-500/20"
+          >
+            Entrar a la comunidad →
+          </Link>
         </div>
       </section>
 

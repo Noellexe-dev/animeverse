@@ -1,34 +1,17 @@
 # ANIMEVERSE
 
-Proyecto React + Vite + TypeScript + Tailwind listo para GitHub Pages en `/animeverse/`.
+Catálogo de animes reales + comunidad local, construido con React, Vite, TypeScript y Tailwind CSS. Publicado en GitHub Pages bajo `/animeverse/`.
 
----
+## Qué incluye
 
-## SUBIR A GITHUB — LEER PRIMERO
+- **Catálogo real**: 20 animes conocidos con título original, sinopsis, géneros, año, episodios, estudio y puntuación.
+- **Favoritos**: se guardan en `localStorage` del navegador.
+- **Comunidad**: publica recomendaciones, da «me gusta» y comenta. Todo se guarda en el navegador; no hay cuentas ni datos enviados a internet.
+- **Recomendar desde el detalle**: el botón «Recomendar en la comunidad» abre el formulario con ese anime preseleccionado.
+- **Rutas internas con `HashRouter`**: recargar cualquier página en GitHub Pages no da 404.
+- **Recursos estáticos**: imágenes en `public/images/` referenciadas con `assetPath()` para respetar `/animeverse/`.
 
-### Si aún NO hiciste "Commit changes" en GitHub
-
-1. Abre esta carpeta en el gestor de archivos.
-2. Pulsa **Ctrl + H** para ver archivos ocultos. Verás `.github`, `.gitignore` y `public/.nojekyll`.
-3. Selecciona **TODO** (Ctrl + A) **menos** la carpeta `_REFERENCIA_NO_SUBIR`.
-4. Arrastra todo a **Add file → Upload files** en GitHub.
-5. Mensaje: `Subir proyecto ANIMEVERSE completo` → **Commit changes**.
-
-### Si ya subiste y faltaron archivos
-
-En `_REFERENCIA_NO_SUBIR/` están los 3 archivos que suelen perderse:
-
-| En GitHub | Copiar desde |
-|---|---|
-| `.github/workflows/deploy.yml` | `_REFERENCIA_NO_SUBIR/github-workflow-deploy.yml` |
-| `.gitignore` | `_REFERENCIA_NO_SUBIR/gitignore.txt` |
-| `public/.nojekyll` | `_REFERENCIA_NO_SUBIR/nojekyll.txt` |
-
-En GitHub: **Add file → Create new file**, escribes el nombre exacto (ej. `.github/workflows/deploy.yml`), pegas el contenido y haces **Commit changes**.
-
-Si te apareció una carpeta `workflows` suelta en la raíz, **bórrala**. El workflow debe estar solo en `.github/workflows/deploy.yml`.
-
----
+> Las publicaciones de ejemplo son solo demostración. Puedes eliminarlas desde la propia comunidad.
 
 ## Desarrollo
 
@@ -39,7 +22,7 @@ npm run dev
 
 Vite sirve en `http://localhost:5173/animeverse/`.
 
-## Build
+## Compilación
 
 ```bash
 npm run build
@@ -47,8 +30,18 @@ npm run build
 
 Genera `dist/`.
 
+## Actualizar el sitio en GitHub
+
+Si subes los cambios por la web de GitHub:
+
+1. Abre la carpeta `CAMBIOS-ANIMEVERSE` que preparé.
+2. Selecciona **todo su contenido** (Ctrl+A) y arrástralo a **Add file → Upload files** en tu repo.
+3. Mensaje: `Añadir catálogo real y comunidad`.
+4. **Commit changes**.
+5. Ve a **Actions** y espera el ✔ verde de `Deploy ANIMEVERSE a GitHub Pages`.
+
+El despliegue es automático en cada push a `main`.
+
 ## Configuración de Pages
 
-En GitHub: **Settings → Pages → Source: GitHub Actions**. Luego espera el ✔ verde en **Actions**.
-
-URL: `https://<TU-USUARIO>.github.io/animeverse/`.
+**Settings → Pages → Source: GitHub Actions**. URL: `https://<TU-USUARIO>.github.io/animeverse/`.

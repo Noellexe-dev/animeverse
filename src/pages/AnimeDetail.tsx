@@ -52,18 +52,27 @@ export function AnimeDetail() {
             ))}
           </div>
 
-          <button
-            type="button"
-            onClick={() => toggleFavorite(anime.id)}
-            aria-pressed={favorite}
-            className={`mt-9 rounded-full px-6 py-3 text-sm font-bold transition-colors ${
-              favorite
-                ? 'bg-rose-500 text-white hover:bg-rose-400'
-                : 'border border-white/20 text-white hover:border-rose-400 hover:bg-rose-500/20'
-            }`}
-          >
-            {favorite ? '♥ En tus favoritos' : '♡ Agregar a favoritos'}
-          </button>
+          <div className="mt-9 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => toggleFavorite(anime.id)}
+              aria-pressed={favorite}
+              className={`rounded-full px-6 py-3 text-sm font-bold transition-colors ${
+                favorite
+                  ? 'bg-rose-500 text-white hover:bg-rose-400'
+                  : 'border border-white/20 text-white hover:border-rose-400 hover:bg-rose-500/20'
+              }`}
+            >
+              {favorite ? '♥ En tus favoritos' : '♡ Agregar a favoritos'}
+            </button>
+
+            <Link
+              to={`/comunidad?anime=${anime.id}`}
+              className="rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+            >
+              Recomendar en la comunidad
+            </Link>
+          </div>
         </div>
       </div>
     </div>
