@@ -1,7 +1,52 @@
 import { useCallback, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 import type { Comment, Post } from '../types'
 
 const STORAGE_KEY = 'animeverse:social:v1'
+
+interface PostRow {
+  id: string
+  created_at: string
+  anime_id: string
+  author: string
+  text: string
+  rating: number
+  likes: number
+}
+
+interface CommentRow {
+  id: string
+  created_at: string
+  post_id: string
+  author: string
+  text: string
+}
+
+function mapComment(row: CommentRow): Comment {
+  return {
+    id: row.id,
+    author: row.author,
+    text: row.text,
+    createdAt: new Date(row.created_at).getTime(),
+  }
+}
+
+function mapPost(row: PostRow, comments: CommentRow[]): Post {
+  return {
+    id: row.id,
+    animeId: row.anime_id,
+    author: row.author,
+    text: row.text,
+    rating: row.rating,
+    likes: row.likes,
+    likedByMe: false,
+    createdAt: new Date(row.created_at).getTime(),
+    comments: comments
+      .filter((comment) => comment.post_id === row.id)
+      .map(mapComment)
+      .sort((a, b) => a.createdAt - b.createdAt),
+  }
+}
 
 const now = Date.now()
 
@@ -81,6 +126,46 @@ export interface NewPostInput {
 
 export function useSocialState() {
   const [posts, setPosts] = useState<Post[]>(readPosts)
+  const remote = supabase
+
+  const loadRemote = useCallback(async () => {
+    if (!remote) return
+    const { data: postRows, error } = await remote
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error || !postRows) return
+
+    const { data: commentRows } = await remote.from('comments').select('*')
+    setPosts(
+      (postRows as PostRow[]).map((row) =>
+        mapPost(row, (commentRows as CommentRow[]) ?? []),
+      ),
+    )
+  }, [remote])
+
+  useEffect(() => {
+    if (!remote) return
+    void loadRemote()
+
+    const channel = remote
+      .channel('animeverse-social')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'posts' },
+        () => void loadRemote(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        () => void loadRemote(),
+      )
+      .subscribe()
+
+    return () => {
+      void remote.removeChannel(channel)
+    }
+  }, [remote, loadRemote])
 
   useEffect(() => {
     try {
@@ -90,52 +175,118 @@ export function useSocialState() {
     }
   }, [posts])
 
-  const addPost = useCallback((input: NewPostInput) => {
-    const post: Post = {
-      id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      animeId: input.animeId,
-      author: input.author.trim() || 'Anónimo',
-      text: input.text.trim(),
-      rating: input.rating,
-      likes: 0,
-      likedByMe: false,
-      createdAt: Date.now(),
-      comments: [],
-    }
-    setPosts((current) => [post, ...current])
-  }, [])
+  const addPost = useCallback(
+    (input: NewPostInput) => {
+      const author = input.author.trim() || 'Anónimo'
+      const text = input.text.trim()
 
-  const toggleLike = useCallback((postId: string) => {
-    setPosts((current) =>
-      current.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              likedByMe: !post.likedByMe,
-              likes: post.likes + (post.likedByMe ? -1 : 1),
-            }
-          : post,
-      ),
-    )
-  }, [])
+      if (remote) {
+        void (async () => {
+          const { data, error } = await remote
+            .from('posts')
+            .insert({ anime_id: input.animeId, author, text, rating: input.rating })
+            .select()
+            .single()
+          if (!error && data) {
+            setPosts((current) => [mapPost(data as PostRow, []), ...current])
+          } else {
+            void loadRemote()
+          }
+        })()
+        return
+      }
 
-  const addComment = useCallback((postId: string, author: string, text: string) => {
-    const comment: Comment = {
-      id: `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      author: author.trim() || 'Anónimo',
-      text: text.trim(),
-      createdAt: Date.now(),
-    }
-    setPosts((current) =>
-      current.map((post) =>
-        post.id === postId ? { ...post, comments: [...post.comments, comment] } : post,
-      ),
-    )
-  }, [])
+      const post: Post = {
+        id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        animeId: input.animeId,
+        author,
+        text,
+        rating: input.rating,
+        likes: 0,
+        likedByMe: false,
+        createdAt: Date.now(),
+        comments: [],
+      }
+      setPosts((current) => [post, ...current])
+    },
+    [remote, loadRemote],
+  )
 
-  const deletePost = useCallback((postId: string) => {
-    setPosts((current) => current.filter((post) => post.id !== postId))
-  }, [])
+  const toggleLike = useCallback(
+    (postId: string) => {
+      if (remote) {
+        const target = posts.find((post) => post.id === postId)
+        void (async () => {
+          await remote
+            .from('posts')
+            .update({ likes: target ? target.likes + (target.likedByMe ? -1 : 1) : 0 })
+            .eq('id', postId)
+          await loadRemote()
+        })()
+      }
+
+      setPosts((current) =>
+        current.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likedByMe: !post.likedByMe,
+                likes: post.likes + (post.likedByMe ? -1 : 1),
+              }
+            : post,
+        ),
+      )
+    },
+    [remote, posts, loadRemote],
+  )
+
+  const addComment = useCallback(
+    (postId: string, author: string, text: string) => {
+      const commentAuthor = author.trim() || 'Anónimo'
+      const commentText = text.trim()
+
+      if (remote) {
+        void (async () => {
+          const { error } = await remote.from('comments').insert({
+            post_id: postId,
+            author: commentAuthor,
+            text: commentText,
+          })
+          if (error) {
+            void loadRemote()
+          } else {
+            await loadRemote()
+          }
+        })()
+      }
+
+      const comment: Comment = {
+        id: `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        author: commentAuthor,
+        text: commentText,
+        createdAt: Date.now(),
+      }
+      setPosts((current) =>
+        current.map((post) =>
+          post.id === postId ? { ...post, comments: [...post.comments, comment] } : post,
+        ),
+      )
+    },
+    [remote, loadRemote],
+  )
+
+  const deletePost = useCallback(
+    (postId: string) => {
+      if (remote) {
+        void (async () => {
+          await remote.from('posts').delete().eq('id', postId)
+          await loadRemote()
+        })()
+      }
+      setPosts((current) => current.filter((post) => post.id !== postId))
+    },
+    [remote, loadRemote],
+  )
 
   return { posts, addPost, toggleLike, addComment, deletePost }
 }
