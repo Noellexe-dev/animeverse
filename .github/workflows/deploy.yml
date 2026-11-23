@@ -5,13 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Permisos mínimos necesarios para publicar con el tipo "GitHub Actions".
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Evita despliegues simultáneos; no cancela el que ya está en curso.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -35,6 +33,9 @@ jobs:
 
       - name: Compilar proyecto
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Configurar Pages
         uses: actions/configure-pages@v5
