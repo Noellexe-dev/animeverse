@@ -65,7 +65,12 @@ export function ProfilePage() {
             {(profile.display_name ?? profile.username).slice(0, 1).toUpperCase()}
           </span>
           <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-black text-white">{profile.display_name ?? profile.username}</h1>
+            <h1 className="flex flex-wrap items-center gap-2 text-3xl font-black text-white">
+              {profile.display_name ?? profile.username}
+              {profile.is_verified && <span className="rounded-full bg-cyan-500/20 px-2 py-1 text-xs font-bold text-cyan-300" title="Cuenta verificada">✓ Verificado</span>}
+              {profile.role === 'admin' && <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs font-bold text-amber-300">ADMIN</span>}
+              {profile.role === 'mod' && <span className="rounded-full bg-violet-500/20 px-2 py-1 text-xs font-bold text-violet-300">MOD</span>}
+            </h1>
             <p className="text-sm text-slate-400">@{profile.username} · {profile.is_public ? 'Perfil público' : 'Perfil privado'}</p>
             <p className="mt-3 max-w-xl text-slate-300">{profile.bio ?? 'Este fan aún no ha escrito su biografía.'}</p>
             <p className="mt-3 text-xs text-slate-500">
@@ -89,6 +94,11 @@ export function ProfilePage() {
                 )}
               </>
             ) : null}
+            {!isMine && user && (
+              <Link to={`/ayuda?user=${profile.id}`} className="rounded-full border border-white/20 px-4 py-2.5 text-sm font-bold text-slate-300 hover:text-amber-300" title="Reportar a esta persona">
+                🚩
+              </Link>
+            )}
           </div>
         </div>
 

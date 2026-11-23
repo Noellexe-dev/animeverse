@@ -30,6 +30,8 @@ export function Header() {
           <NavLink to="/" end className={linkClass}>Explorar</NavLink>
           <NavLink to="/comunidad" className={linkClass}>Comunidad</NavLink>
           {user && <NavLink to="/chats" className={linkClass}>Chats</NavLink>}
+          {user && <NavLink to="/ayuda" className={linkClass}>Ayuda</NavLink>}
+          {profile?.role === 'admin' && <NavLink to="/panel" className={linkClass}>Panel</NavLink>}
           <NavLink to="/favoritos" className={linkClass}>
             Favoritos
             {favorites.length > 0 && (

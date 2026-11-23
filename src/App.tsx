@@ -4,6 +4,7 @@ import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Welcome } from './components/Welcome'
 import { useAuth } from './context/AuthContext'
+import { AdminPanel } from './pages/AdminPanel'
 import { AnimeDetail } from './pages/AnimeDetail'
 import { Chats } from './pages/Chats'
 import { Community } from './pages/Community'
@@ -11,6 +12,7 @@ import { Favorites } from './pages/Favorites'
 import { Home } from './pages/Home'
 import { NotFound } from './pages/NotFound'
 import { ProfilePage } from './pages/ProfilePage'
+import { Reports } from './pages/Reports'
 
 export default function App() {
   const { loading } = useAuth()
@@ -37,6 +39,8 @@ export default function App() {
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/perfil/:username" element={<ProfilePage />} />
           <Route path="/chats" element={<Chats />} />
+          <Route path="/ayuda" element={<Reports />} />
+          <Route path="/panel" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

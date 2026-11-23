@@ -39,6 +39,7 @@ export function PostCard({ post, onLike, onComment, onDelete, onTagClick }: Post
               {post.author?.display_name ?? post.author?.username ?? 'Fan anónimo'}
             </Link>
             {post.author && <span className="text-xs text-slate-500">@{post.author.username}</span>}
+            {post.author?.is_verified && <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-bold text-cyan-300" title="Cuenta verificada">✓</span>}
             <span className="text-xs text-slate-500">· {timeAgo(post.created_at)}</span>
           </div>
           {anime && (
@@ -47,11 +48,20 @@ export function PostCard({ post, onLike, onComment, onDelete, onTagClick }: Post
             </Link>
           )}
         </div>
-        {isMine && (
-          <button type="button" onClick={() => onDelete(post.id)} className="text-xs text-slate-500 hover:text-rose-400">
-            Borrar
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-3">
+          <Link
+            to={`/ayuda?post=${post.id}`}
+            className="text-xs text-slate-500 hover:text-amber-300"
+            title="Reportar publicación"
+          >
+            🚩
+          </Link>
+          {isMine && (
+            <button type="button" onClick={() => onDelete(post.id)} className="text-xs text-slate-500 hover:text-rose-400">
+              Borrar
+            </button>
+          )}
+        </div>
       </header>
 
       {post.text && (

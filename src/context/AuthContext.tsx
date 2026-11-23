@@ -16,6 +16,7 @@ interface AuthContextValue {
   deleteAccount: () => Promise<void>
   updateProfile: (patch: Partial<Pick<Profile, 'display_name' | 'bio' | 'is_public' | 'avatar_url'>>) => Promise<string | null>
   refreshProfile: () => Promise<void>
+  claimAdmin: () => Promise<string>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -108,6 +109,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsGuest(false)
   }, [])
 
+  useEffect(() => {
+    if (session?.user && supabase) {
+      void supabase.rpc('touch_last_active')
+    }
+  }, [session?.user?.id])
+
+  const claimAdmin = useCallback(async () => {
+    if (!supabase) return 'La conexión con Supabase no está disponible.'
+    const { data, error } = await supabase.rpc('claim_admin')
+    if (error) return error.message
+    await refreshProfile()
+    return (data as string) ?? 'Listo.'
+  }, [refreshProfile])
+
   const updateProfile = useCallback(async (patch: Partial<Pick<Profile, 'display_name' | 'bio' | 'is_public' | 'avatar_url'>>) => {
     if (!supabase || !session?.user) return 'Debes iniciar sesión.'
     const { error } = await supabase.from('profiles').update(patch).eq('id', session.user.id)
@@ -131,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deleteAccount,
         updateProfile,
         refreshProfile,
+        claimAdmin,
       }}
     >
       {children}

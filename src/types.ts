@@ -23,6 +23,80 @@ export interface Profile {
   bio: string | null
   is_public: boolean
   created_at: string
+  role?: 'user' | 'mod' | 'admin'
+  is_verified?: boolean
+  is_banned?: boolean
+  last_active_at?: string | null
+}
+
+export interface Report {
+  id: string
+  reporter_id: string
+  reported_user_id: string | null
+  post_id: string | null
+  kind: 'problema' | 'sugerencia' | 'usuario' | 'publicacion'
+  message: string
+  status: 'abierto' | 'en revision' | 'resuelto'
+  admin_reply: string | null
+  created_at: string
+}
+
+export interface AdminUser {
+  id: string
+  username: string
+  display_name: string | null
+  email: string
+  role: 'user' | 'mod' | 'admin'
+  is_verified: boolean
+  is_banned: boolean
+  created_at: string
+  last_active_at: string | null
+  posts: number
+  comments: number
+  reviews: number
+  reports: number
+}
+
+export interface AdminReport {
+  id: string
+  kind: string
+  message: string
+  status: string
+  admin_reply: string | null
+  created_at: string
+  reporter: string | null
+  reporter_email: string | null
+  reported: string | null
+  post_text: string | null
+}
+
+export interface AdminPost {
+  id: string
+  text: string | null
+  image_url: string | null
+  created_at: string
+  author: string | null
+  likes: number
+  comments: number
+  reports: number
+}
+
+export interface AdminComment {
+  id: string
+  text: string
+  created_at: string
+  author: string | null
+  post_id: string
+}
+
+export interface AdminStats {
+  users: number
+  posts: number
+  comments: number
+  reviews: number
+  open_reports: number
+  banned: number
+  verified: number
 }
 
 export interface Post {

@@ -5,7 +5,8 @@ export function Footer() {
         ANIMEVERSE · Un universo para tus historias favoritas
       </p>
       <p className="mt-1 text-xs">
-        Los favoritos se guardan solo en tu navegador.
+        <a href="#/ayuda" className="hover:text-violet-300">Reportes y ayuda</a>
+        {' · '}Los favoritos se guardan solo en tu navegador.
       </p>
     </footer>
   )
