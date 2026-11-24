@@ -1,15 +1,11 @@
 import { Link } from 'react-router-dom'
 import type { Anime } from '../types'
-import { useFavorites } from '../context/FavoritesContext'
 
 interface AnimeCardProps {
   anime: Anime
 }
 
 export function AnimeCard({ anime }: AnimeCardProps) {
-  const { toggleFavorite, isFavorite } = useFavorites()
-  const favorite = isFavorite(anime.id)
-
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-black/20 transition-transform duration-300 hover:-translate-y-1">
       <Link to={`/anime/${anime.id}`} className="block" aria-label={`Ver detalles de ${anime.title}`}>
@@ -28,20 +24,6 @@ export function AnimeCard({ anime }: AnimeCardProps) {
           </span>
         </div>
       </Link>
-
-      <button
-        type="button"
-        onClick={() => toggleFavorite(anime.id)}
-        aria-label={favorite ? `Quitar ${anime.title} de favoritos` : `Agregar ${anime.title} a favoritos`}
-        aria-pressed={favorite}
-        className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border text-lg backdrop-blur transition-colors ${
-          favorite
-            ? 'border-rose-400/60 bg-rose-500/80 text-white'
-            : 'border-white/20 bg-black/50 text-white/80 hover:bg-rose-500/70 hover:text-white'
-        }`}
-      >
-        {favorite ? '♥' : '♡'}
-      </button>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
         <Link to={`/anime/${anime.id}`} className="text-lg font-bold leading-tight text-white hover:text-violet-300">

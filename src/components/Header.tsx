@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useFavorites } from '../context/FavoritesContext'
 import { AuthModal } from './AuthModal'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -12,7 +11,6 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 export function Header() {
-  const { favorites } = useFavorites()
   const { user, profile, signOut } = useAuth()
   const [showAuth, setShowAuth] = useState(false)
 
@@ -30,16 +28,16 @@ export function Header() {
           <NavLink to="/" end className={linkClass}>Explorar</NavLink>
           <NavLink to="/comunidad" className={linkClass}>Comunidad</NavLink>
           {user && <NavLink to="/chats" className={linkClass}>Chats</NavLink>}
-          {user && <NavLink to="/ayuda" className={linkClass}>Ayuda</NavLink>}
-          {profile?.role === 'admin' && <NavLink to="/panel" className={linkClass}>Panel</NavLink>}
-          <NavLink to="/favoritos" className={linkClass}>
-            Favoritos
-            {favorites.length > 0 && (
-              <span className="ml-2 rounded-full bg-violet-500 px-2 py-0.5 text-xs font-bold text-white">
-                {favorites.length}
-              </span>
-            )}
-          </NavLink>
+          {user && (
+            <NavLink
+              to="/ajustes"
+              className={({ isActive }) => `${linkClass({ isActive })} text-lg leading-none`}
+              aria-label="Ajustes"
+              title="Ajustes"
+            >
+              ⚙
+            </NavLink>
+          )}
           {user ? (
             <>
               <NavLink to="/perfil" className={linkClass}>

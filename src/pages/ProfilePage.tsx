@@ -1,11 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { MoreMenu } from '../components/MoreMenu'
 import { PostCard } from '../components/PostCard'
+import { ReviewCard } from '../components/ReviewCard'
 import { useAuth } from '../context/AuthContext'
 import { animes } from '../data/anime'
 import { useFollows, useProfile } from '../hooks/useFollows'
 import { useLibrary } from '../hooks/useLibrary'
 import { usePosts } from '../hooks/usePosts'
+import { useReviewFeed } from '../hooks/useReviews'
 import type { LibraryStatus } from '../types'
 
 const statusLabels: Record<LibraryStatus, string> = {
@@ -24,6 +27,7 @@ export function ProfilePage() {
 
   const { items } = useLibrary(profile?.id)
   const { posts, loading, toggleLike, addComment, deletePost } = usePosts('profile', profile?.id)
+  const { reviews, loading: reviewsLoading } = useReviewFeed(profile ? [profile.id] : [])
 
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
@@ -57,27 +61,33 @@ export function ProfilePage() {
     if (!message) setEditing(false)
   }
 
+  function handleDelete() {
+    if (window.confirm('¿Seguro que quieres borrar tu cuenta? Esta acción no se puede deshacer.')) {
+      void deleteAccount()
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-violet-500/10 to-cyan-500/5 p-6 sm:p-8">
-        <div className="flex flex-wrap items-start gap-5">
-          <span className="grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 text-3xl font-black text-white">
+      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-violet-500/10 to-cyan-500/5 p-5 sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+          <span className="mx-auto grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 text-3xl font-black text-white sm:mx-0">
             {(profile.display_name ?? profile.username).slice(0, 1).toUpperCase()}
           </span>
-          <div className="min-w-0 flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 text-3xl font-black text-white">
+          <div className="min-w-0 flex-1 text-center sm:text-left">
+            <h1 className="flex flex-wrap items-center justify-center gap-2 text-2xl font-black text-white sm:justify-start sm:text-3xl">
               {profile.display_name ?? profile.username}
-              {profile.is_verified && <span className="rounded-full bg-cyan-500/20 px-2 py-1 text-xs font-bold text-cyan-300" title="Cuenta verificada">✓ Verificado</span>}
+              {profile.is_verified && <span className="rounded-full bg-cyan-500/20 px-2 py-1 text-xs font-bold text-cyan-300">✓ Verificado</span>}
               {profile.role === 'admin' && <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs font-bold text-amber-300">ADMIN</span>}
               {profile.role === 'mod' && <span className="rounded-full bg-violet-500/20 px-2 py-1 text-xs font-bold text-violet-300">MOD</span>}
             </h1>
             <p className="text-sm text-slate-400">@{profile.username} · {profile.is_public ? 'Perfil público' : 'Perfil privado'}</p>
-            <p className="mt-3 max-w-xl text-slate-300">{profile.bio ?? 'Este fan aún no ha escrito su biografía.'}</p>
+            <p className="mt-3 break-words text-slate-300">{profile.bio ?? 'Este fan aún no ha escrito su biografía.'}</p>
             <p className="mt-3 text-xs text-slate-500">
-              {items.length} animes en su lista · {posts.length} publicaciones
+              {items.length} animes en su lista · {posts.length} publicaciones · {reviews.length} opiniones
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-start">
             {isMine ? (
               <button type="button" onClick={startEdit} className="rounded-full border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5">
                 Editar perfil
@@ -94,16 +104,20 @@ export function ProfilePage() {
                 )}
               </>
             ) : null}
-            {!isMine && user && (
-              <Link to={`/ayuda?user=${profile.id}`} className="rounded-full border border-white/20 px-4 py-2.5 text-sm font-bold text-slate-300 hover:text-amber-300" title="Reportar a esta persona">
-                🚩
-              </Link>
-            )}
+            <MoreMenu
+              label={isMine ? 'Opciones de perfil' : 'Opciones de esta cuenta'}
+              items={isMine ? [
+                { label: 'Ajustes', to: '/ajustes' },
+                { label: 'Borrar mi cuenta', onClick: handleDelete, danger: true },
+              ] : [
+                { label: 'Reportar cuenta', to: `/ayuda?user=${profile.id}` },
+              ]}
+            />
           </div>
         </div>
 
         {editing && (
-          <form onSubmit={saveProfile} className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-[#141423] p-5">
+          <form onSubmit={saveProfile} className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-[#141423] p-5 text-left">
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase text-slate-400">Nombre visible</span>
               <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-violet-400 focus:outline-none" />
@@ -125,24 +139,6 @@ export function ProfilePage() {
 
         {notice && <p className="mt-4 rounded-xl bg-violet-500/15 px-4 py-3 text-sm text-violet-200">{notice}</p>}
       </section>
-
-      {isMine && (
-        <section className="mt-8 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5">
-          <h2 className="font-bold text-white">Cuenta</h2>
-          <p className="mt-1 text-sm text-slate-400">Si borras tu cuenta se eliminan tus publicaciones, opiniones y mensajes. No se puede deshacer.</p>
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm('¿Seguro que quieres borrar tu cuenta? Esta acción no se puede deshacer.')) {
-                void deleteAccount()
-              }
-            }}
-            className="mt-4 rounded-full border border-rose-500/40 px-5 py-2.5 text-sm font-bold text-rose-300 hover:bg-rose-500/10"
-          >
-            Borrar mi cuenta
-          </button>
-        </section>
-      )}
 
       <section className="mt-12">
         <h2 className="text-2xl font-bold text-white">Su lista de animes</h2>
@@ -178,6 +174,15 @@ export function ProfilePage() {
             )}
           </>
         )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-2xl font-bold text-white">Opiniones y puntuaciones</h2>
+        <div className="mt-5 space-y-4">
+          {reviewsLoading ? <p className="text-slate-400">Cargando…</p> : reviews.length > 0 ? reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          )) : <p className="rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no ha opinado sobre ningún anime.</p>}
+        </div>
       </section>
 
       <section className="mt-12">

@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AuthModal } from '../components/AuthModal'
 import { useAuth } from '../context/AuthContext'
-import { useFavorites } from '../context/FavoritesContext'
 import { animes } from '../data/anime'
 import { useLibrary } from '../hooks/useLibrary'
 import { useReviews } from '../hooks/useReviews'
@@ -19,18 +18,17 @@ const statusOptions: Array<{ value: LibraryStatus; label: string }> = [
 export function AnimeDetail() {
   const { id } = useParams<{ id: string }>()
   const anime = animes.find((item) => item.id === id)
-  const { toggleFavorite, isFavorite } = useFavorites()
   const { user } = useAuth()
   const { items, setAnimeStatus } = useLibrary()
   const { reviews, loading, myReview, average, saveReview, deleteReview } = useReviews(id ?? '')
   const [rating, setRating] = useState(5)
   const [text, setText] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
+  const [reviewNotice, setReviewNotice] = useState<string | null>(null)
   const [showAuth, setShowAuth] = useState(false)
 
   if (!anime) return <NotFound message="Ese anime no existe en el catálogo." />
 
-  const favorite = isFavorite(anime.id)
   const current = items.find((item) => item.anime_id === anime.id)
 
   async function handleStatus(status: LibraryStatus) {
@@ -41,17 +39,17 @@ export function AnimeDetail() {
 
   async function handleReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setNotice(null)
+    setReviewNotice(null)
     const message = await saveReview(rating, text)
     if (message) {
-      setNotice(message)
+      setReviewNotice(message)
       return
     }
     if (!current && rating > 0) {
       await setAnimeStatus(anime!.id, 'visto', rating)
     }
     setText('')
-    setNotice('¡Opinión publicada!')
+    setReviewNotice('¡Opinión publicada!')
   }
 
   return (
@@ -93,20 +91,7 @@ export function AnimeDetail() {
             ))}
           </div>
 
-          <div className="mt-9 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => toggleFavorite(anime.id)}
-              aria-pressed={favorite}
-              className={`rounded-full px-5 py-3 text-sm font-bold transition-colors ${
-                favorite ? 'bg-rose-500 text-white hover:bg-rose-400' : 'border border-white/20 text-white hover:border-rose-400 hover:bg-rose-500/20'
-              }`}
-            >
-              {favorite ? '♥ En tus favoritos' : '♡ Favorito'}
-            </button>
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="mt-9 rounded-2xl border border-white/10 bg-white/5 p-5">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">Agregar a mi perfil</h2>
             <p className="mt-1 text-xs text-slate-500">Solo tú puedes ver esto si tu perfil es privado.</p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -171,7 +156,7 @@ export function AnimeDetail() {
                     </div>
                     <span className="ml-auto text-amber-300">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
                   </div>
-                  <p className="mt-4 leading-relaxed text-slate-300">{review.text}</p>
+                  {review.text && <p className="mt-4 leading-relaxed text-slate-300">{review.text}</p>}
                   {review.user_id === user?.id && (
                     <button type="button" onClick={() => void deleteReview()} className="mt-4 text-xs text-slate-500 hover:text-rose-400">
                       Borrar mi opinión
@@ -207,12 +192,13 @@ export function AnimeDetail() {
                   value={text}
                   onChange={(event) => setText(event.target.value)}
                   rows={4}
-                  placeholder="¿Qué te pareció? ¿Lo recomiendas?"
+                  placeholder="¿Qué te pareció? (opcional, también puedes dejar solo las estrellas)"
                   className="mt-4 w-full resize-y rounded-xl border border-white/10 bg-[#141423] px-4 py-3 text-white placeholder:text-slate-500 focus:border-violet-400 focus:outline-none"
                 />
                 <button type="submit" className="mt-4 w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-5 py-3 text-sm font-bold text-white hover:opacity-90">
                   Publicar opinión
                 </button>
+                {reviewNotice && <p className="mt-3 rounded-xl bg-violet-500/15 px-4 py-3 text-sm text-violet-200">{reviewNotice}</p>}
               </form>
             ) : (
               <div className="mt-4">

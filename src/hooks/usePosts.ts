@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { Post } from '../types'
 import { parseHashtags } from '../utils/format'
 
-const PROFILE_FIELDS = 'id,username,display_name,avatar_url,is_public'
+const PROFILE_FIELDS = 'id,username,display_name,avatar_url,is_public,is_verified,role'
 
 interface PostRow {
   id: string
@@ -39,7 +39,7 @@ export interface NewPostInput {
   animeId?: string | null
 }
 
-export function usePosts(mode: 'feed' | 'anime' | 'profile' = 'feed', targetId?: string) {
+export function usePosts(mode: 'all' | 'feed' | 'anime' | 'profile' = 'all', targetId?: string) {
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,11 +75,7 @@ export function usePosts(mode: 'feed' | 'anime' | 'profile' = 'feed', targetId?:
         return
       }
       const { data: following } = await supabase.from('follows').select('following_id').eq('follower_id', user.id)
-      const { data: followers } = await supabase.from('follows').select('follower_id').eq('following_id', user.id)
-      const ids = Array.from(new Set([
-        ...(following ?? []).map((row) => row.following_id as string),
-        ...(followers ?? []).map((row) => row.follower_id as string),
-      ]))
+      const ids = (following ?? []).map((row) => row.following_id as string)
       if (ids.length === 0) {
         setPosts([])
         setLoading(false)

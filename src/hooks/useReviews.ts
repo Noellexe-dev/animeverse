@@ -40,7 +40,6 @@ export function useReviews(animeId: string) {
   const saveReview = useCallback(async (rating: number, text: string): Promise<string | null> => {
     if (!supabase || !user) return 'Inicia sesión para opinar.'
     const clean = text.trim()
-    if (!clean) return 'Escribe tu opinión.'
     const { error } = await supabase.from('anime_reviews').upsert(
       { user_id: user.id, anime_id: animeId, rating, text: clean, created_at: new Date().toISOString() },
       { onConflict: 'user_id,anime_id' },
@@ -68,4 +67,51 @@ export function useReviews(animeId: string) {
     : 0
 
   return { reviews, loading, myReview, average, saveReview, deleteReview }
+}
+
+/**
+ * Opiniones con estrellas para el muro social o para un perfil.
+ * Si se pasan ids, solo se muestran esas cuentas; si no, se muestran todas.
+ */
+export function useReviewFeed(filterUserIds?: string[]) {
+  const key = filterUserIds?.join(',') ?? ''
+  const [reviews, setReviews] = useState<AnimeReview[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const load = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    if (filterUserIds && key === '') {
+      setReviews([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    let query = supabase
+      .from('anime_reviews')
+      .select('*, author:profiles(id,username,display_name,avatar_url,is_verified,role)')
+      .order('created_at', { ascending: false })
+    if (filterUserIds) query = query.in('user_id', filterUserIds)
+    const { data } = await query
+    setReviews(((data ?? []) as unknown as ReviewRow[]) as AnimeReview[])
+    setLoading(false)
+  }, [key])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  useEffect(() => {
+    const client = supabase
+    if (!client) return
+    const channel = client
+      .channel(`animeverse-reviews-${key || 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'anime_reviews' }, () => void load())
+      .subscribe()
+    return () => { void client.removeChannel(channel) }
+  }, [load, key])
+
+  return { reviews, loading, reload: load }
 }

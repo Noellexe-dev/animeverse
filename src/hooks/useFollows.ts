@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
 
-const FIELDS = 'id,username,display_name,avatar_url,is_public'
+const FIELDS = 'id,username,display_name,avatar_url,is_public,is_verified,role'
 
 export function useFollows() {
   const { user } = useAuth()
@@ -14,7 +14,7 @@ export function useFollows() {
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    if (!supabase || !user) {
+    if (!supabase) {
       setFollowing([])
       setFollowers([])
       setPeople([])
@@ -23,10 +23,25 @@ export function useFollows() {
       return
     }
     setLoading(true)
+
+    const peopleQuery = user
+      ? supabase.from('profiles').select(FIELDS).neq('id', user.id).limit(30)
+      : supabase.from('profiles').select(FIELDS).limit(30)
+
+    if (!user) {
+      const { data } = await peopleQuery
+      setFollowing([])
+      setFollowers([])
+      setPeople((data ?? []) as Profile[])
+      setFriendProfiles([])
+      setLoading(false)
+      return
+    }
+
     const [followingRes, followersRes, peopleRes] = await Promise.all([
       supabase.from('follows').select('following_id').eq('follower_id', user.id),
       supabase.from('follows').select('follower_id').eq('following_id', user.id),
-      supabase.from('profiles').select(FIELDS).neq('id', user.id).limit(30),
+      peopleQuery,
     ])
     const followingIds = (followingRes.data ?? []).map((row) => row.following_id as string)
     const followerIds = (followersRes.data ?? []).map((row) => row.follower_id as string)

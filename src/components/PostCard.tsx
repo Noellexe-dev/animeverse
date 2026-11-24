@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { MoreMenu } from './MoreMenu'
 import { useAuth } from '../context/AuthContext'
 import { animes } from '../data/anime'
 import type { Post } from '../types'
@@ -49,18 +50,14 @@ export function PostCard({ post, onLike, onComment, onDelete, onTagClick }: Post
           )}
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <Link
-            to={`/ayuda?post=${post.id}`}
-            className="text-xs text-slate-500 hover:text-amber-300"
-            title="Reportar publicación"
-          >
-            🚩
-          </Link>
           {isMine && (
             <button type="button" onClick={() => onDelete(post.id)} className="text-xs text-slate-500 hover:text-rose-400">
               Borrar
             </button>
           )}
+          <MoreMenu items={[
+            { label: 'Reportar publicación', to: `/ayuda?post=${post.id}` },
+          ]} />
         </div>
       </header>
 
