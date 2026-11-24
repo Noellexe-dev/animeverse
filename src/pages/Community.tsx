@@ -21,9 +21,9 @@ interface FeedItem {
 export function Community() {
   const { user } = useAuth()
   const [tab, setTab] = useState<Tab>('general')
-  const { posts, loading, addPost, toggleLike, addComment, deletePost } = usePosts(tab === 'general' ? 'all' : 'feed')
+  const { posts, loading, error: postsError, addPost, toggleLike, addComment, deletePost } = usePosts(tab === 'general' ? 'all' : 'feed')
   const { following, people, friends, toggleFollow } = useFollows()
-  const { reviews, loading: reviewsLoading } = useReviewFeed(tab === 'general' ? undefined : following)
+  const { reviews, loading: reviewsLoading, error: reviewsError } = useReviewFeed(tab === 'general' ? undefined : following)
   const [text, setText] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -115,6 +115,7 @@ export function Community() {
       </div>
 
       {notice && <p className="mt-4 rounded-xl bg-violet-500/15 px-4 py-3 text-sm text-violet-200">{notice}</p>}
+      {(postsError || reviewsError) && <p className="mt-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-200">{postsError || reviewsError}</p>}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         <div>

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { fetchProfiles } from '../lib/profiles'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
-
-const FIELDS = 'id,username,display_name,avatar_url,is_public,is_verified,role'
 
 export function useFollows() {
   const { user } = useAuth()
@@ -25,8 +24,8 @@ export function useFollows() {
     setLoading(true)
 
     const peopleQuery = user
-      ? supabase.from('profiles').select(FIELDS).neq('id', user.id).limit(30)
-      : supabase.from('profiles').select(FIELDS).limit(30)
+      ? supabase.from('profiles').select('*').neq('id', user.id).limit(30)
+      : supabase.from('profiles').select('*').limit(30)
 
     if (!user) {
       const { data } = await peopleQuery
@@ -50,8 +49,7 @@ export function useFollows() {
     setPeople((peopleRes.data ?? []) as Profile[])
     const mutualIds = followingIds.filter((id) => followerIds.includes(id))
     if (mutualIds.length > 0) {
-      const { data: mutualData } = await supabase.from('profiles').select(FIELDS).in('id', mutualIds)
-      setFriendProfiles((mutualData ?? []) as Profile[])
+      setFriendProfiles(await fetchProfiles(mutualIds))
     } else {
       setFriendProfiles([])
     }

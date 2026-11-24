@@ -24,6 +24,7 @@ alter table public.comments add column if not exists user_id uuid references aut
 alter table public.posts alter column text drop not null;
 alter table public.posts alter column author drop not null;
 alter table public.posts alter column rating drop not null;
+alter table public.posts alter column anime_id drop not null;
 alter table public.comments alter column author drop not null;
 
 create table if not exists public.likes (

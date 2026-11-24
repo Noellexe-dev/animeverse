@@ -20,7 +20,7 @@ export function AnimeDetail() {
   const anime = animes.find((item) => item.id === id)
   const { user } = useAuth()
   const { items, setAnimeStatus } = useLibrary()
-  const { reviews, loading, myReview, average, saveReview, deleteReview } = useReviews(id ?? '')
+  const { reviews, loading, error: reviewsError, myReview, average, saveReview, deleteReview } = useReviews(id ?? '')
   const [rating, setRating] = useState(5)
   const [text, setText] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
@@ -199,6 +199,7 @@ export function AnimeDetail() {
                   Publicar opinión
                 </button>
                 {reviewNotice && <p className="mt-3 rounded-xl bg-violet-500/15 px-4 py-3 text-sm text-violet-200">{reviewNotice}</p>}
+                {reviewsError && <p className="mt-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-200">{reviewsError}</p>}
               </form>
             ) : (
               <div className="mt-4">

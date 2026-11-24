@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { fetchProfiles } from '../lib/profiles'
 import { supabase } from '../lib/supabase'
-import type { Post } from '../types'
+import type { Post, PostComment, Profile } from '../types'
 import { parseHashtags } from '../utils/format'
-
-const PROFILE_FIELDS = 'id,username,display_name,avatar_url,is_public,is_verified,role'
 
 interface PostRow {
   id: string
@@ -13,12 +12,17 @@ interface PostRow {
   text: string | null
   image_url: string | null
   created_at: string
-  author?: Post['author']
-  comments?: Post['comments']
-  likes?: { user_id: string }[]
 }
 
-function normalize(row: PostRow, myId: string | null): Post {
+function normalize(
+  row: PostRow,
+  authors: Profile[],
+  comments: PostComment[],
+  likes: { post_id: string; user_id: string }[],
+  myId: string | null,
+): Post {
+  const authorMap = new Map(authors.map((profile) => [profile.id, profile]))
+  const mine = likes.filter((like) => like.post_id === row.id)
   return {
     id: row.id,
     user_id: row.user_id,
@@ -26,10 +30,10 @@ function normalize(row: PostRow, myId: string | null): Post {
     text: row.text,
     image_url: row.image_url,
     created_at: row.created_at,
-    author: row.author ?? null,
-    comments: row.comments ?? [],
-    like_count: row.likes?.length ?? 0,
-    liked_by_me: Boolean(myId && row.likes?.some((like) => like.user_id === myId)),
+    author: authorMap.get(row.user_id) ?? null,
+    comments: comments.filter((comment) => comment.post_id === row.id),
+    like_count: mine.length,
+    liked_by_me: Boolean(myId && mine.some((like) => like.user_id === myId)),
   }
 }
 
@@ -59,10 +63,7 @@ export function usePosts(mode: 'all' | 'feed' | 'anime' | 'profile' = 'all', tar
       return
     }
 
-    let query = supabase
-      .from('posts')
-      .select(`*, author:profiles(${PROFILE_FIELDS}), comments(*, author:profiles(${PROFILE_FIELDS})), likes(user_id)`)
-      .order('created_at', { ascending: false })
+    let query = supabase.from('posts').select('*').order('created_at', { ascending: false })
 
     if (mode === 'anime' && targetId) {
       query = query.eq('anime_id', targetId)
@@ -87,10 +88,32 @@ export function usePosts(mode: 'all' | 'feed' | 'anime' | 'profile' = 'all', tar
     const { data, error: queryError } = await query
     if (queryError) {
       setError(queryError.message)
+      setPosts([])
       setLoading(false)
       return
     }
-    setPosts(((data ?? []) as unknown as PostRow[]).map((row) => normalize(row, user?.id ?? null)))
+
+    const rows = (data ?? []) as PostRow[]
+    const postIds = rows.map((row) => row.id)
+    let comments: PostComment[] = []
+    let likes: { post_id: string; user_id: string }[] = []
+    let authors: Profile[] = []
+
+    if (postIds.length > 0) {
+      const [commentsRes, likesRes, authorRows] = await Promise.all([
+        supabase.from('comments').select('*').in('post_id', postIds).order('created_at', { ascending: true }),
+        supabase.from('likes').select('post_id,user_id').in('post_id', postIds),
+        fetchProfiles(rows.map((row) => row.user_id)),
+      ])
+      comments = (commentsRes.data ?? []) as PostComment[]
+      likes = (likesRes.data ?? []) as { post_id: string; user_id: string }[]
+      authors = authorRows
+      const commentAuthors = await fetchProfiles(comments.map((comment) => comment.user_id))
+      const seen = new Set(authors.map((profile) => profile.id))
+      authors = [...authors, ...commentAuthors.filter((profile) => !seen.has(profile.id))]
+    }
+
+    setPosts(rows.map((row) => normalize(row, authors, comments, likes, user?.id ?? null)))
     setLoading(false)
   }, [mode, targetId, user?.id])
 
@@ -127,16 +150,26 @@ export function usePosts(mode: 'all' | 'feed' | 'anime' | 'profile' = 'all', tar
       imageUrl = supabase.storage.from('post-images').getPublicUrl(path).data.publicUrl
     }
 
-    const { error: insertError } = await supabase.from('posts').insert({
+    const payload = {
       user_id: user.id,
       text: text || null,
       image_url: imageUrl,
       anime_id: input.animeId ?? null,
-    })
+    }
+
+    let { error: insertError } = await supabase.from('posts').insert(payload)
+
+    // Antiguas instalaciones tienen `anime_id` como NOT NULL. Si la base lo
+    // rechaza, guardamos la publicación general con un valor de texto seguro.
+    if (insertError && /anime_id/.test(insertError.message) && /not-null|not null/i.test(insertError.message)) {
+      const retry = await supabase.from('posts').insert({ ...payload, anime_id: 'general' })
+      insertError = retry.error
+    }
+
     if (insertError) return insertError.message
     await load()
     return null
-  }, [supabase, user, load])
+  }, [user, load])
 
   const toggleLike = useCallback(async (postId: string) => {
     if (!supabase || !user) return 'Inicia sesión para dar me gusta.'

@@ -1,22 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { fetchProfiles } from '../lib/profiles'
 import { supabase } from '../lib/supabase'
-import type { AnimeReview } from '../types'
+import type { AnimeReview, Profile } from '../types'
 
-interface ReviewRow {
-  id: string
-  user_id: string
-  anime_id: string
-  rating: number
-  text: string
-  created_at: string
-  author?: AnimeReview['author']
+function withAuthors(rows: AnimeReview[], authors: Profile[]): AnimeReview[] {
+  const map = new Map(authors.map((profile) => [profile.id, profile]))
+  return rows.map((row) => ({ ...row, author: map.get(row.user_id) ?? null }))
 }
 
 export function useReviews(animeId: string) {
   const { user } = useAuth()
   const [reviews, setReviews] = useState<AnimeReview[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!supabase) {
@@ -24,12 +21,28 @@ export function useReviews(animeId: string) {
       return
     }
     setLoading(true)
-    const { data } = await supabase
+    setError(null)
+
+    const { data, error: selectError } = await supabase
       .from('anime_reviews')
-      .select('*, author:profiles(id,username,display_name,avatar_url)')
+      .select('*')
       .eq('anime_id', animeId)
       .order('created_at', { ascending: false })
-    setReviews(((data ?? []) as unknown as ReviewRow[]) as AnimeReview[])
+
+    if (selectError) {
+      setError(selectError.message)
+      setReviews([])
+      setLoading(false)
+      return
+    }
+
+    const rows = (data ?? []) as AnimeReview[]
+    const ids = Array.from(new Set(rows.map((row) => row.user_id)))
+    let authors: Profile[] = []
+    if (ids.length > 0) {
+      authors = await fetchProfiles(ids)
+    }
+    setReviews(withAuthors(rows, authors))
     setLoading(false)
   }, [animeId])
 
@@ -40,23 +53,23 @@ export function useReviews(animeId: string) {
   const saveReview = useCallback(async (rating: number, text: string): Promise<string | null> => {
     if (!supabase || !user) return 'Inicia sesión para opinar.'
     const clean = text.trim()
-    const { error } = await supabase.from('anime_reviews').upsert(
-      { user_id: user.id, anime_id: animeId, rating, text: clean, created_at: new Date().toISOString() },
+    const { error: upsertError } = await supabase.from('anime_reviews').upsert(
+      { user_id: user.id, anime_id: animeId, rating, text: clean },
       { onConflict: 'user_id,anime_id' },
     )
-    if (error) return error.message
+    if (upsertError) return upsertError.message
     await load()
     return null
   }, [user, animeId, load])
 
   const deleteReview = useCallback(async (): Promise<string | null> => {
     if (!supabase || !user) return 'Inicia sesión para borrar tu opinión.'
-    const { error } = await supabase
+    const { error: deleteError } = await supabase
       .from('anime_reviews')
       .delete()
       .eq('user_id', user.id)
       .eq('anime_id', animeId)
-    if (error) return error.message
+    if (deleteError) return deleteError.message
     await load()
     return null
   }, [user, animeId, load])
@@ -66,7 +79,7 @@ export function useReviews(animeId: string) {
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0
 
-  return { reviews, loading, myReview, average, saveReview, deleteReview }
+  return { reviews, loading, error, myReview, average, saveReview, deleteReview }
 }
 
 /**
@@ -77,6 +90,7 @@ export function useReviewFeed(filterUserIds?: string[]) {
   const key = filterUserIds?.join(',') ?? ''
   const [reviews, setReviews] = useState<AnimeReview[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!supabase) {
@@ -89,13 +103,26 @@ export function useReviewFeed(filterUserIds?: string[]) {
       return
     }
     setLoading(true)
-    let query = supabase
-      .from('anime_reviews')
-      .select('*, author:profiles(id,username,display_name,avatar_url,is_verified,role)')
-      .order('created_at', { ascending: false })
+    setError(null)
+
+    let query = supabase.from('anime_reviews').select('*').order('created_at', { ascending: false })
     if (filterUserIds) query = query.in('user_id', filterUserIds)
-    const { data } = await query
-    setReviews(((data ?? []) as unknown as ReviewRow[]) as AnimeReview[])
+    const { data, error: selectError } = await query
+
+    if (selectError) {
+      setError(selectError.message)
+      setReviews([])
+      setLoading(false)
+      return
+    }
+
+    const rows = (data ?? []) as AnimeReview[]
+    const ids = Array.from(new Set(rows.map((row) => row.user_id)))
+    let authors: Profile[] = []
+    if (ids.length > 0) {
+      authors = await fetchProfiles(ids)
+    }
+    setReviews(withAuthors(rows, authors))
     setLoading(false)
   }, [key])
 
@@ -113,5 +140,5 @@ export function useReviewFeed(filterUserIds?: string[]) {
     return () => { void client.removeChannel(channel) }
   }, [load, key])
 
-  return { reviews, loading, reload: load }
+  return { reviews, loading, error, reload: load }
 }

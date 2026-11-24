@@ -30,9 +30,15 @@ Se mantienen: bienvenida, entrada como visitante, catálogo de 43 animes, opinio
 
 > La Project URL y la publishable key ya están escritas en `src/lib/supabase.ts`. No hay secretos nuevos.
 
+### Arreglo de la V4.1 (publicar sin anime y ver opiniones)
+
+La web ya viene corregida: si tu base es antigua y `anime_id` sigue siendo obligatorio, el botón **+** guarda la publicación de todos modos. Además, las opiniones se leen directamente de la tabla y los nombres de usuario se cargan aparte, así que ya no aparece el mensaje «¡Opinión publicada!» sin que se vea nada.
+
+Opcional: si quieres arreglar también la base de datos, ejecuta `SUPABASE-FIX-V4.sql` en **SQL Editor → New query → Run**. No es obligatorio para que la web funcione.
+
 ## Subir a GitHub
 
-1. Abre la carpeta `ANIMEVERSE-V4-LISTO` (al mismo nivel que esta).
+1. Abre la carpeta `ANIMEVERSE-V4-LISTO` (al mismo nivel que esta). También incluye `SUPABASE-FIX-V4.sql` (opcional).
 2. GitHub → tu repo `Noellexe-dev/animeverse` → **Add file → Upload files**.
 3. Arrastra **todo el contenido** de esa carpeta.
 4. Mensaje: `ANIMEVERSE V4: comunidad general, ajustes y chats tipo WhatsApp`.
