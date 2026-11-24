@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Welcome } from './components/Welcome'
 import { useAuth } from './context/AuthContext'
+import { useNotifications } from './context/NotificationsContext'
 import { AdminPanel } from './pages/AdminPanel'
 import { AnimeDetail } from './pages/AnimeDetail'
 import { Chats } from './pages/Chats'
@@ -16,8 +17,15 @@ import { Settings } from './pages/Settings'
 
 export default function App() {
   const { loading, user } = useAuth()
+  const { markChatsRead } = useNotifications()
   const [entered, setEntered] = useState(false)
   const location = useLocation()
+
+  const isChats = location.pathname === '/chats'
+
+  useEffect(() => {
+    if (isChats && user) markChatsRead()
+  }, [isChats, user?.id, markChatsRead])
 
   if (loading) {
     return (
@@ -36,10 +44,10 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0b0b14]">
+    <div className={`flex flex-col bg-[#0b0b14] ${isChats ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       {!entered && <Welcome onEnter={() => setEntered(true)} />}
       <Header />
-      <main className="flex-1">
+      <main className={isChats ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1'}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/anime/:id" element={<AnimeDetail />} />
@@ -53,7 +61,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <Footer />
+      {!isChats && <Footer />}
     </div>
   )
 }

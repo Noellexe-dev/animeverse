@@ -26,3 +26,15 @@ begin
   alter table public.posts alter column rating drop not null;
 exception when undefined_column then null;
 end $$;
+
+-- Realtime para las notificaciones (campanita)
+do $$
+begin
+  alter publication supabase_realtime add table public.follows;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.likes;
+exception when duplicate_object then null;
+end $$;

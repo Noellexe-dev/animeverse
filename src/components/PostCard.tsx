@@ -93,10 +93,18 @@ export function PostCard({ post, onLike, onComment, onDelete, onTagClick }: Post
       {showComments && (
         <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
           {(post.comments ?? []).map((item) => (
-            <div key={item.id} className="text-sm">
-              <span className="font-bold text-violet-200">{item.author?.display_name ?? item.author?.username ?? 'Fan'}</span>
-              <span className="ml-2 text-xs text-slate-500">{timeAgo(item.created_at)}</span>
-              <p className="mt-1 text-slate-300">{item.text}</p>
+            <div key={item.id} className="rounded-xl border border-white/5 bg-white/5 p-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  to={item.author ? `/perfil/${item.author.username}` : '/perfil'}
+                  className="font-bold text-violet-200 hover:text-violet-100 hover:underline"
+                >
+                  {item.author?.display_name ?? item.author?.username ?? 'Fan'}
+                </Link>
+                {item.author && <span className="text-xs text-slate-500">@{item.author.username}</span>}
+                <span className="ml-auto text-xs text-slate-500">{timeAgo(item.created_at)}</span>
+              </div>
+              <p className="mt-1 break-words text-slate-300">{item.text}</p>
             </div>
           ))}
           {user ? (

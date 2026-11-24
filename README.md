@@ -1,6 +1,17 @@
-# ANIMEVERSE V4
+# ANIMEVERSE V4.2
 
 Catálogo real de animes + red social para fans, con cuentas, perfiles, chats, opiniones con estrellas y panel de administración. React + Vite + TypeScript + Tailwind + Supabase. Publicado en GitHub Pages en `/animeverse/`.
+
+## Cambios de la V4.2
+
+- **Comentarios con autor**: cada respuesta muestra quién escribió y un enlace a su perfil. Esas respuestas también aparecen en el perfil de esa persona, dentro de la pestaña **Publicaciones → Respuestas en la comunidad**, con enlace a la publicación original.
+- **Buscador en Comunidad**: busca por hashtags, palabras, nombre de anime, usuario o nombre visible. También filtra la lista de fans.
+- **Perfil en 3 pestañas**: **Lista de animes**, **Opiniones y puntuaciones** y **Publicaciones**. Ya no están todas apiladas.
+- **Chats a pantalla completa**: ocupan todo el espacio menos la barra superior (logo, Explorar, Comunidad, Mensajes, perfil). Scroll independiente y salto automático al último mensaje.
+- **Regalos en chats**: botón 🎁 con 8 regalos (🌸 🍜 ⭐ 🎀 🍡 🐱 💫 🍰) con animación. Se guardan como mensajes y se borran a los 7 días igual que el resto.
+- **Descripciones temporales**: los visitantes siempre ven los textos completos. Las cuentas registradas los ven solo durante **3 horas** desde su primera visita; después queda el título corto: **Explorar**, **Comunidad** y **Mensajes**.
+- **Notificaciones**: campana 🔔 con avisos de nuevos seguidores, comentarios, likes, respuestas y mensajes. Punto rojo en la campana y en **Mensajes** (sin números). Se marcan como leídas al abrir la campana o al entrar a chats.
+- **Extras**: al venir desde una notificación, la publicación se resalta y se desplaza hasta ella. No se muestra cantidad de seguidores.
 
 ## Cambios de la V4
 
@@ -41,7 +52,7 @@ Opcional: si quieres arreglar también la base de datos, ejecuta `SUPABASE-FIX-V
 1. Abre la carpeta `ANIMEVERSE-V4-LISTO` (al mismo nivel que esta). También incluye `SUPABASE-FIX-V4.sql` (opcional).
 2. GitHub → tu repo `Noellexe-dev/animeverse` → **Add file → Upload files**.
 3. Arrastra **todo el contenido** de esa carpeta.
-4. Mensaje: `ANIMEVERSE V4: comunidad general, ajustes y chats tipo WhatsApp`.
+4. Mensaje: `ANIMEVERSE V4.2: notificaciones, buscador, regalos y perfil por pestañas`.
 5. **Commit changes**.
 6. **Delete file** (en la web de GitHub) en estos 3 archivos que ya no se usan:
    - `src/pages/Favorites.tsx`

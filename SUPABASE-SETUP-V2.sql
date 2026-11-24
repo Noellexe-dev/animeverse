@@ -263,6 +263,16 @@ begin
   alter publication supabase_realtime add table public.messages;
 exception when duplicate_object then null;
 end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.follows;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.likes;
+exception when duplicate_object then null;
+end $$;
 
 -- ------------------------------------------------------------
 -- 8. Publicaciones de ejemplo (compatibles con la versión anterior)

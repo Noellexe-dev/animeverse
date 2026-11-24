@@ -9,7 +9,9 @@ import { useFollows, useProfile } from '../hooks/useFollows'
 import { useLibrary } from '../hooks/useLibrary'
 import { usePosts } from '../hooks/usePosts'
 import { useReviewFeed } from '../hooks/useReviews'
+import { useUserComments } from '../hooks/useUserComments'
 import type { LibraryStatus } from '../types'
+import { timeAgo } from '../utils/format'
 
 const statusLabels: Record<LibraryStatus, string> = {
   favorito: '♥ Favoritos',
@@ -17,18 +19,28 @@ const statusLabels: Record<LibraryStatus, string> = {
   visto: '✓ Vistos',
 }
 
+const tabs = [
+  { id: 'lista', label: 'Lista de animes' },
+  { id: 'opiniones', label: 'Opiniones y puntuaciones' },
+  { id: 'publicaciones', label: 'Publicaciones' },
+] as const
+
+type ProfileTab = typeof tabs[number]['id']
+
 export function ProfilePage() {
   const { username } = useParams<{ username: string }>()
   const { user, profile: myProfile, updateProfile, deleteAccount } = useAuth()
   const { profile: viewedProfile } = useProfile(username)
-  const { following, people, toggleFollow } = useFollows()
+  const { following, toggleFollow } = useFollows()
   const profile = username ? viewedProfile : myProfile
   const isMine = Boolean(profile && profile.id === user?.id)
 
   const { items } = useLibrary(profile?.id)
   const { posts, loading, toggleLike, addComment, deletePost } = usePosts('profile', profile?.id)
   const { reviews, loading: reviewsLoading } = useReviewFeed(profile ? [profile.id] : [])
+  const { comments: userComments, loading: commentsLoading } = useUserComments(profile?.id)
 
+  const [tab, setTab] = useState<ProfileTab>('lista')
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [isPublic, setIsPublic] = useState(true)
@@ -140,78 +152,114 @@ export function ProfilePage() {
         {notice && <p className="mt-4 rounded-xl bg-violet-500/15 px-4 py-3 text-sm text-violet-200">{notice}</p>}
       </section>
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-bold text-white">Su lista de animes</h2>
-        {locked ? (
-          <p className="mt-4 rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Este perfil es privado. Su lista no está disponible.</p>
-        ) : (
-          <>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {(['todos', 'favorito', 'viendo', 'visto'] as const).map((value) => (
-                <button key={value} type="button" onClick={() => setFilter(value)} className={`rounded-full px-4 py-2 text-sm font-semibold ${filter === value ? 'bg-violet-600 text-white' : 'border border-white/10 text-slate-300'}`}>
-                  {value === 'todos' ? 'Todos' : statusLabels[value]}
-                </button>
-              ))}
-            </div>
-            {visibleItems.length > 0 ? (
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {visibleItems.map((item) => {
-                  const anime = animes.find((entry) => entry.id === item.anime_id)!
-                  return (
-                    <Link key={item.anime_id} to={`/anime/${anime.id}`} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-3 hover:border-violet-400/40">
-                      <img src={anime.image} alt="" className="h-20 w-14 rounded-lg object-cover" />
-                      <div className="min-w-0">
-                        <p className="truncate font-bold text-white">{anime.title}</p>
-                        <p className="text-xs text-cyan-300">{statusLabels[item.status]}</p>
-                        {item.rating && <p className="mt-1 text-xs text-amber-300">{'★'.repeat(item.rating)}</p>}
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
+      <div className="mt-10 flex gap-2 overflow-x-auto border-b border-white/10 pb-3" role="tablist" aria-label="Secciones del perfil">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setTab(item.id)}
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors ${tab === item.id ? 'bg-violet-600 text-white' : 'text-slate-300 hover:bg-white/5'}`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6">
+        {tab === 'lista' && (
+          <section>
+            <h2 className="text-2xl font-bold text-white">Su lista de animes</h2>
+            {locked ? (
+              <p className="mt-4 rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Este perfil es privado. Su lista no está disponible.</p>
             ) : (
-              <p className="mt-6 rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no hay animes en esta lista.</p>
+              <>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {(['todos', 'favorito', 'viendo', 'visto'] as const).map((value) => (
+                    <button key={value} type="button" onClick={() => setFilter(value)} className={`rounded-full px-4 py-2 text-sm font-semibold ${filter === value ? 'bg-violet-600 text-white' : 'border border-white/10 text-slate-300'}`}>
+                      {value === 'todos' ? 'Todos' : statusLabels[value]}
+                    </button>
+                  ))}
+                </div>
+                {visibleItems.length > 0 ? (
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {visibleItems.map((item) => {
+                      const anime = animes.find((entry) => entry.id === item.anime_id)!
+                      return (
+                        <Link key={item.anime_id} to={`/anime/${anime.id}`} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-3 hover:border-violet-400/40">
+                          <img src={anime.image} alt="" className="h-20 w-14 rounded-lg object-cover" />
+                          <div className="min-w-0">
+                            <p className="truncate font-bold text-white">{anime.title}</p>
+                            <p className="text-xs text-cyan-300">{statusLabels[item.status]}</p>
+                            {item.rating && <p className="mt-1 text-xs text-amber-300">{'★'.repeat(item.rating)}</p>}
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="mt-6 rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no hay animes en esta lista.</p>
+                )}
+              </>
             )}
-          </>
+          </section>
         )}
-      </section>
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-bold text-white">Opiniones y puntuaciones</h2>
-        <div className="mt-5 space-y-4">
-          {reviewsLoading ? <p className="text-slate-400">Cargando…</p> : reviews.length > 0 ? reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          )) : <p className="rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no ha opinado sobre ningún anime.</p>}
-        </div>
-      </section>
+        {tab === 'opiniones' && (
+          <section>
+            <h2 className="text-2xl font-bold text-white">Opiniones y puntuaciones</h2>
+            <div className="mt-5 space-y-4">
+              {reviewsLoading ? <p className="text-slate-400">Cargando…</p> : reviews.length > 0 ? reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              )) : <p className="rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no ha opinado sobre ningún anime.</p>}
+            </div>
+          </section>
+        )}
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-bold text-white">Publicaciones</h2>
-        <div className="mt-5 space-y-5">
-          {loading ? <p className="text-slate-400">Cargando…</p> : posts.length > 0 ? posts.map((post) => (
-            <PostCard key={post.id} post={post} onLike={(id) => void toggleLike(id)} onComment={(id, value) => void addComment(id, value)} onDelete={(id) => void deletePost(id)} />
-          )) : <p className="rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no hay publicaciones.</p>}
-        </div>
-      </section>
+        {tab === 'publicaciones' && (
+          <section className="space-y-5">
+            <h2 className="text-2xl font-bold text-white">Publicaciones</h2>
+            {loading ? (
+              <p className="text-slate-400">Cargando…</p>
+            ) : posts.length > 0 ? posts.map((post) => (
+              <PostCard key={post.id} post={post} onLike={(id) => void toggleLike(id)} onComment={(id, value) => void addComment(id, value)} onDelete={(id) => void deletePost(id)} />
+            )) : (
+              <p className="rounded-2xl border border-dashed border-white/15 py-10 text-center text-slate-400">Todavía no hay publicaciones.</p>
+            )}
 
-      {isMine && !username && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-bold text-white">Encontrar fans</h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {people.length > 0 ? people.map((person) => (
-              <div key={person.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <Link to={`/perfil/${person.username}`} className="grid h-10 w-10 place-items-center rounded-full bg-violet-600 font-bold text-white">
-                  {(person.display_name ?? person.username).slice(0, 1).toUpperCase()}
-                </Link>
-                <Link to={`/perfil/${person.username}`} className="min-w-0 flex-1 truncate text-white hover:text-violet-300">{person.display_name ?? person.username}</Link>
-                <button type="button" onClick={() => void toggleFollow(person.id)} className="rounded-full bg-violet-600 px-4 py-2 text-xs font-bold text-white hover:bg-violet-500">
-                  {following.includes(person.id) ? 'Siguiendo' : 'Seguir'}
-                </button>
+            <div className="border-t border-white/10 pt-8">
+              <h3 className="text-xl font-bold text-white">Respuestas en la comunidad</h3>
+              <p className="mt-1 text-sm text-slate-400">Comentarios que esta persona dejó en publicaciones de otros fans.</p>
+              <div className="mt-4 space-y-3">
+                {commentsLoading ? (
+                  <p className="text-slate-400">Cargando…</p>
+                ) : userComments.length > 0 ? userComments.map((activity) => (
+                  <article key={activity.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span className="font-bold text-violet-200">Respondió</span>
+                      {activity.post?.author && (
+                        <Link to={`/perfil/${activity.post.author.username}`} className="text-cyan-300 hover:underline">
+                          a @{activity.post.author.username}
+                        </Link>
+                      )}
+                      <span>· {timeAgo(activity.created_at)}</span>
+                    </div>
+                    <p className="mt-2 break-words text-sm text-slate-200">{activity.text}</p>
+                    {activity.post && (
+                      <Link to={`/comunidad?post=${activity.post.id}`} className="mt-3 inline-block text-xs text-violet-300 hover:underline">
+                        Ver la publicación →
+                      </Link>
+                    )}
+                  </article>
+                )) : (
+                  <p className="rounded-2xl border border-dashed border-white/15 py-8 text-center text-sm text-slate-400">Todavía no ha respondido a nadie.</p>
+                )}
               </div>
-            )) : <p className="text-slate-400">Todavía no hay otros fans registrados.</p>}
-          </div>
-        </section>
-      )}
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   )
 }
